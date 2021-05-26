@@ -13,7 +13,7 @@ but we can see how different everyone is using their device :)
 
 This example visualizes the given input files each in thier own chart:
 
-`java -jar replayChart-1.0-SNAPSHOT-jar-with-dependencies.jar file1 file2`
+`java -jar replayChart-1.0.jar file1 file2`
 
 ![](https://i.imgur.com/f9T2lAh.png"")
 
@@ -21,7 +21,7 @@ This example visualizes the given input files each in thier own chart:
 
 This example visualizes the given input files in the same chart:
 
-`java -jar replayChart-1.0-SNAPSHOT-jar-with-dependencies.jar file1 file2 -overlay`
+`java -jar replayChart-1.0.jar file1 file2 -overlay`
 
 ![](https://i.imgur.com/KWR1O5F.png"")
 
@@ -29,7 +29,7 @@ This example visualizes the given input files in the same chart:
 
 This example visualizes all input files in the given folder in the same chart:
 
-`java -jar replayChart-1.0-SNAPSHOT-jar-with-dependencies.jar /path/to/folder`
+`java -jar replayChart-1.0.jar /path/to/folder`
 
 ![](https://i.imgur.com/C9HHLDh.png"")
 
