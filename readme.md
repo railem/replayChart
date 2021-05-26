@@ -9,9 +9,11 @@ In order to produce data that this tool can read, use donadigo's [generate_input
 Before we go into the examples, I'd like to point out that nothing suspicious is going on the in these example screenshots,
 but we can see how different everyone is using their device :)
 
+###[Download the latest Release [v1.0]](https://github.com/railem/replayChart/releases/download/1.0/replayChart-1.0.jar)
+
 ## Example 1
 
-This example visualizes the given input files each in thier own chart:
+This example visualizes the given input files each in their own chart:
 
 `java -jar replayChart-1.0.jar file1 file2`
 
