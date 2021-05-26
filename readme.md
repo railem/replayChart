@@ -29,7 +29,7 @@ This example visualizes the given input files in the same chart:
 
 ## Example 3
 
-This example visualizes all input files in the given folder in the same chart:
+This example visualizes all input files in the given folder in seperate charts:
 
 `java -jar replayChart-1.0.jar /path/to/folder`
 
