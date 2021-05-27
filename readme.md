@@ -11,6 +11,11 @@ but we can see how different everyone is using their device :)
 
 ### [Download the latest Release [v1.0]](https://github.com/railem/replayChart/releases/download/1.0/replayChart-1.0.jar)
 
+## Parameters
+
+`-overlay` - Overlays the steering of multiple replays in one chart <br>
+`-invert` - Inverts left and right
+
 ## Example 1
 
 This example visualizes the given input files each in their own chart:

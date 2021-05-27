@@ -13,8 +13,9 @@ import java.util.List;
 
 public final class ReplayChart
 {
-
     private boolean overlayMode = false;
+    private boolean invertSteering = false;
+
     private List<ReplayData> replays = new ArrayList<>();
 
     public static void main( String[] args )
@@ -35,6 +36,11 @@ public final class ReplayChart
         {
             overlayMode = true;
             arguments.remove( "-overlay" );
+        }
+        if( arguments.contains( "-invert" ) ) //check for inverted steering mode
+        {
+            invertSteering = true;
+            arguments.remove( "-invert" );
         }
 
         if( arguments.size() == 1 && new File( arguments.get( 0 ) ).isDirectory() ) //read all files in folder
@@ -80,10 +86,20 @@ public final class ReplayChart
     private void initChart( XYChart chart )
     {
         chart.setXAxisTitle( "Time (ms)" );
-        chart.setYAxisTitle( " < Left | Right >" );
-        chart.getStyler().setYAxisMax( 65536.0 );
-        chart.getStyler().setYAxisMin( -65536.0 );
         chart.getStyler().setYAxisTicksVisible( false );
+
+        if( !invertSteering )
+        {
+            chart.setYAxisTitle( " < Left | Right >" );
+            chart.getStyler().setYAxisMax( 65536.0 );
+            chart.getStyler().setYAxisMin( -65536.0 );
+        }
+        else
+        {
+            chart.setYAxisTitle( "< Right | Left > " );
+            chart.getStyler().setYAxisMax( -65536.0 );
+            chart.getStyler().setYAxisMin( 65536.0 );
+        }
     }
 
     /**
