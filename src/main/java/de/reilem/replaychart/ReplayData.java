@@ -11,11 +11,15 @@ public class ReplayData
     private String       name;
     private String       type;
     private List<Double> steering;
+    private List<Double> acceleration;
+    private List<Double> brake;
     private List<Double> timestamps;
 
     public ReplayData()
     {
         steering = new ArrayList<>();
+        acceleration = new ArrayList<>();
+        brake = new ArrayList<>();
         timestamps = new ArrayList<>();
     }
 
@@ -62,6 +66,25 @@ public class ReplayData
     public void setType( String type )
     {
         this.type = type;
+    }
+    public double[] getAcceleration()
+    {
+        return listToArray( acceleration );
+    }
+
+    public double[] getBrake()
+    {
+        return listToArray( brake );
+    }
+
+    public void addAcceleration( double d )
+    {
+        acceleration.add( d );
+    }
+
+    public void addBrake( double d )
+    {
+        brake.add( d );
     }
 
     private double[] listToArray( List<Double> list )
