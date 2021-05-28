@@ -178,35 +178,44 @@ public final class ReplayChart
     {
         AnnotationText accelerationLegend;
         AnnotationText brakeLegend;
-        double offset = r.getReplayTime() < 30000 ? -500 : -1000;
+        AnnotationText deviceLegend;
+        AnnotationText timeOnLegend;
+        double offset = r.getReplayTime() < 30000 ? 500 : 1000;
 
         if ( !invertSteering )
         {
-            accelerationLegend = new AnnotationText( "Throttle", offset, max_steering + 16000, false );
-            brakeLegend = new AnnotationText( "Brake", offset, min_steering - 22000, false );
+            accelerationLegend = new AnnotationText( "Throttle", r.getReplayTime() + offset, max_steering - 10000, false );
+            brakeLegend = new AnnotationText( "Brake", r.getReplayTime() + offset, min_steering + 10000, false );
+
+            deviceLegend = new AnnotationText(
+                    "Device: [" + r.getType().name() + "]   Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
+                    , r.getReplayTime() / 6, max_steering + 16000, false );
+
+            timeOnLegend = new AnnotationText(
+                    r.getPercentTimeOnThrottle() + "   " + r.getPercentTimeOnBrake()
+                    , r.getReplayTime() - r.getReplayTime() / 6, max_steering + 16000, false );
         }
         else
         {
-            accelerationLegend = new AnnotationText( "Throttle", offset, max_steering - 16000, false );
-            brakeLegend = new AnnotationText( "Brake", offset, min_steering + 22000, false );
+            accelerationLegend = new AnnotationText( "Throttle", r.getReplayTime() + offset, max_steering + 10000, false );
+            brakeLegend = new AnnotationText( "Brake", r.getReplayTime() + offset, min_steering - 10000, false );
+
+            deviceLegend = new AnnotationText(
+                    "Device: [" + r.getType().name() + "]   Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
+                    , r.getReplayTime() / 6, max_steering - 16000, false );
+
+            timeOnLegend = new AnnotationText(
+                    r.getPercentTimeOnThrottle() + "   " + r.getPercentTimeOnBrake()
+                    , r.getReplayTime() - r.getReplayTime() / 6, max_steering - 16000, false );
         }
         accelerationLegend.setFontColor( new Color( 60, 150, 40 ) );
         brakeLegend.setFontColor( new Color( 200, 80, 60 ) );
+        deviceLegend.setFontColor( Color.BLACK );
+        timeOnLegend.setFontColor( Color.BLACK );
+
         chart.addAnnotation( accelerationLegend );
         chart.addAnnotation( brakeLegend );
-
-        //device & time
-        AnnotationText deviceLegend = new AnnotationText(
-                "Device: [" + r.getType().name() + "]   Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
-                , r.getReplayTime() / 6, max_steering + 16000, false );
-        deviceLegend.setFontColor( Color.BLACK );
         chart.addAnnotation( deviceLegend );
-
-        //device & time
-        AnnotationText timeOnLegend = new AnnotationText(
-                r.getPercentTimeOnThrottle() + "   " + r.getPercentTimeOnBrake()
-                , r.getReplayTime() - r.getReplayTime() / 6, max_steering + 16000, false );
-        timeOnLegend.setFontColor( Color.BLACK );
         chart.addAnnotation( timeOnLegend );
     }
 
@@ -221,14 +230,16 @@ public final class ReplayChart
         chart.setXAxisTitle( "Time (s)" );
         chart.setYAxisTitle( "Steering" );
         chart.getStyler().setYAxisTicksVisible( false );
+        chart.getStyler().setYAxisTitleVisible( false );
+        chart.getStyler().setXAxisTitleVisible( false );
         chart.getStyler().setYAxisMax( max_steering );
         chart.getStyler().setYAxisMin( min_steering );
         chart.getStyler().setZoomEnabled( true );
-        chart.getStyler().setXAxisLabelRotation( 30 );
+        //chart.getStyler().setXAxisLabelRotation( 30 );
 
-        chart.getStyler().setxAxisTickLabelsFormattingFunction( aDouble -> formatTime( aDouble ) );
+        chart.getStyler().setxAxisTickLabelsFormattingFunction( aDouble -> formatTimeFullSecond( aDouble, r ) );
 
-        double offset = r.getReplayTime() < 30000 ? -500 : -1000;
+        double offset = r.getReplayTime() < 30000 ? -800 : -1600;
         if ( !invertSteering )
         {
             chart.addAnnotation( new AnnotationText( "Right", offset, max_steering - 10000, false ) );
@@ -239,6 +250,8 @@ public final class ReplayChart
             chart.addAnnotation( new AnnotationText( "Left", offset, max_steering + 10000, false ) );
             chart.addAnnotation( new AnnotationText( "Right", offset, min_steering - 10000, false ) );
         }
+        chart.addAnnotation( new AnnotationText( "Steering", offset, 0, false ) );
+        chart.getStyler().setXAxisMin( r.getReplayTime() < 30000 ? -500.0 : -1000.0 );
     }
 
     /**
@@ -543,10 +556,33 @@ public final class ReplayChart
      */
     public static String formatTime( Double aDouble )
     {
+        String value = aDouble.toString().replaceAll( "0\\.0", "" ); //cut the 0.0
+        int length = value.length();
+
+        if ( length < 3 )
+        {
+            return value;
+        }
+        return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
+    }
+
+    /**
+     * formats the time - full second
+     *
+     * @param aDouble
+     * @param r
+     * @return
+     */
+    public static String formatTimeFullSecond( Double aDouble, ReplayData r )
+    {
         String value = aDouble.toString();
         if ( value.equals( "0.0" ) )
         {
-            return "0";
+            return "0 s";
+        }
+        else if( value.startsWith( "-" ) )
+        {
+            return " ";
         }
 
         value = value.replaceAll( "0\\.0", "" ); //cut the 0.0
@@ -556,7 +592,7 @@ public final class ReplayChart
         {
             return value;
         }
-        return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
+        return value.substring( 0, length - 2 ) + " s";
     }
 
     /**
