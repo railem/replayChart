@@ -4,7 +4,10 @@ import org.knowm.xchart.*;
 import org.knowm.xchart.style.Styler;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -14,7 +17,7 @@ import java.util.List;
 public final class ReplayChart
 {
     private boolean overlaySteering = false;
-    private boolean invertSteering = false;
+    private boolean invertSteering  = false;
 
     private double max_steering = 65536.0;
     private double min_steering = -65536.0;
@@ -60,43 +63,106 @@ public final class ReplayChart
 
         if ( overlaySteering ) //overlay all datasets in one chart
         {
-            XYChart chart = new XYChartBuilder().width( 1440 ).height( 300 ).build();
-            initChart( chart );
-            replays.forEach( r -> chart.addSeries( r.getTitle(), r.getTimestamps(), r.getSteering() ).setMarker( SeriesMarkers.NONE ) );
-            new SwingWrapper( chart ).displayChart();
+            XYChart steeringChart = new XYChartBuilder().width( 1440 ).height( 320 ).build();
+
+            initChart( steeringChart, replays.get( 0 ) );
+            steeringChart.getStyler().setLegendPosition( Styler.LegendPosition.InsideNW );
+            replays.forEach( r ->
+                    steeringChart.addSeries( r.getChartTitleShort(), r.getTimestamps(), r.getSteering() ).setMarker( SeriesMarkers.NONE ) );
+            JFrame frame = new SwingWrapper( steeringChart ).displayChart();
+            frame.setMinimumSize( new Dimension( 900, 320 ) );
+            resizeLegend( frame, steeringChart );
+
+            frame.addComponentListener( new ComponentAdapter()
+            {
+                public void componentResized( ComponentEvent evt )
+                {
+                    resizeLegend( frame, steeringChart );
+                }
+            } );
         }
         else //render every dataset in separate chart
         {
             List<XYChart> charts = new ArrayList<>();
             replays.forEach( r ->
             {
-                XYChart chart = new XYChartBuilder().width( 1440 ).height( 200 ).theme( Styler.ChartTheme.XChart).build();
-                initChart( chart );
+                XYChart chart = new XYChartBuilder().width( 1440 ).height( 200 ).theme( Styler.ChartTheme.XChart ).build();
+                initChart( chart, r );
                 chart.getStyler().setLegendVisible( false );
-                chart.setTitle( r.getTitle() );
+                chart.setTitle( r.getChartTitle() );
 
-                XYSeries accelerationSeries = chart.addSeries( "Acceleration", r.getTimestamps(), r.getAcceleration() );
-                accelerationSeries.setXYSeriesRenderStyle( XYSeries.XYSeriesRenderStyle.Area );
-                accelerationSeries.setMarker( SeriesMarkers.NONE );
-                accelerationSeries.setFillColor( new Color( 180, 255, 160 ) );
-                accelerationSeries.setLineColor( new Color( 0, 0, 0, 0 ) );
+                if ( r.getAcceleration() != null )
+                {
+                    XYSeries accelerationSeries = chart.addSeries( "Acceleration", r.getTimestamps(), r.getAcceleration() );
+                    accelerationSeries.setXYSeriesRenderStyle( XYSeries.XYSeriesRenderStyle.Area );
+                    accelerationSeries.setMarker( SeriesMarkers.NONE );
+                    accelerationSeries.setFillColor( new Color( 180, 255, 160 ) );
+                    accelerationSeries.setLineColor( new Color( 0, 0, 0, 0 ) );
+                }
 
-                XYSeries brakeSeries = chart.addSeries( "Brake", r.getTimestamps(), r.getBrake() );
-                brakeSeries.setXYSeriesRenderStyle( XYSeries.XYSeriesRenderStyle.Area );
-                brakeSeries.setMarker( SeriesMarkers.NONE );
-                brakeSeries.setFillColor( new Color( 255, 180, 160 ) );
-                brakeSeries.setLineColor( new Color( 0, 0, 0, 0 ) );
+                if ( r.getBrake() != null )
+                {
+                    XYSeries brakeSeries = chart.addSeries( "Brake", r.getTimestamps(), r.getBrake() );
+                    brakeSeries.setXYSeriesRenderStyle( XYSeries.XYSeriesRenderStyle.Area );
+                    brakeSeries.setMarker( SeriesMarkers.NONE );
+                    brakeSeries.setFillColor( new Color( 255, 180, 160 ) );
+                    brakeSeries.setLineColor( new Color( 0, 0, 0, 0 ) );
+                }
 
-                XYSeries steeringSeries = chart.addSeries( "Steering", r.getTimestamps(), r.getSteering() );
-                steeringSeries.setMarker( SeriesMarkers.NONE );
-                steeringSeries.setLineColor( Color.BLACK );
+                if ( r.getSteering() != null )
+                {
+                    XYSeries steeringSeries = chart.addSeries( "Steering", r.getTimestamps(), r.getSteering() );
+                    steeringSeries.setMarker( SeriesMarkers.NONE );
+                    steeringSeries.setLineColor( Color.BLACK );
+                }
 
-                initCustomLegend( chart );
-
+                initCustomLegend( chart, r );
                 charts.add( chart );
             } );
 
-            new SwingWrapper( charts, charts.size(), 1 ).setTitle( "Replay Chart" ).displayChartMatrix();
+            JFrame frame = new SwingWrapper( charts, charts.size(), 1 ).setTitle( "Replay Chart" ).displayChartMatrix();
+            frame.setMinimumSize( new Dimension( 900, 200 * replays.size() ) );
+        }
+    }
+
+    /**
+     * resizes the max/min of the x-axis to fit the legend in the graph
+     *
+     * @param frame
+     * @param chart
+     */
+    private void resizeLegend( JFrame frame, XYChart chart )
+    {
+        int height = frame.getHeight();
+        if ( !invertSteering )
+        {
+            if ( height < 400 )
+            {
+                chart.getStyler().setYAxisMax( max_steering + (40000000 / frame.getHeight()) );
+            }
+            else if ( height < 500 )
+            {
+                chart.getStyler().setYAxisMax( max_steering + (29000000 / frame.getHeight()) );
+            }
+            else
+            {
+                chart.getStyler().setYAxisMax( max_steering + (20000000 / frame.getHeight()) );
+            }
+        }
+        else
+        {
+            if ( height < 400 )
+            {
+                chart.getStyler().setYAxisMax( max_steering - (40000000 / frame.getHeight()) );
+            }
+            else if ( height < 500 )
+            {
+                chart.getStyler().setYAxisMax( max_steering - (29000000 / frame.getHeight()) );
+            }
+            else
+            {
+                chart.getStyler().setYAxisMax( max_steering - (20000000 / frame.getHeight()) );
+            }
         }
     }
 
@@ -104,36 +170,44 @@ public final class ReplayChart
      * add acceleration and brake legend
      *
      * @param chart
+     * @param r
      */
-    private void initCustomLegend( XYChart chart )
+    private void initCustomLegend( XYChart chart, ReplayData r )
     {
         AnnotationText accelerationLegend;
         AnnotationText brakeLegend;
+        double offset = r.getReplayTime() < 30000 ? -500 : -1000;
 
-        if( !invertSteering )
+        if ( !invertSteering )
         {
-            accelerationLegend = new AnnotationText( "Throttle", -1000, max_steering + 16000, false );
-            brakeLegend = new AnnotationText( "Brake", -1000, min_steering - 22000, false );
+            accelerationLegend = new AnnotationText( "Throttle", offset, max_steering + 16000, false );
+            brakeLegend = new AnnotationText( "Brake", offset, min_steering - 22000, false );
         }
         else
         {
-            accelerationLegend = new AnnotationText( "Throttle", -1000, max_steering - 16000, false );
-            brakeLegend = new AnnotationText( "Brake", -1000, min_steering + 22000, false );
+            accelerationLegend = new AnnotationText( "Throttle", offset, max_steering - 16000, false );
+            brakeLegend = new AnnotationText( "Brake", offset, min_steering + 22000, false );
         }
-
         accelerationLegend.setFontColor( new Color( 60, 150, 40 ) );
         brakeLegend.setFontColor( new Color( 200, 80, 60 ) );
-
         chart.addAnnotation( accelerationLegend );
         chart.addAnnotation( brakeLegend );
+
+        //device & time
+        AnnotationText deviceLegend = new AnnotationText(
+                "Device: [" + r.getType().name() + "]        Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
+                , r.getReplayTime() - r.getReplayTime() / 6, max_steering + 16000, false );
+        deviceLegend.setFontColor( Color.BLACK );
+        chart.addAnnotation( deviceLegend );
     }
 
     /**
      * style the given chart
      *
      * @param chart
+     * @param r
      */
-    private void initChart( XYChart chart )
+    private void initChart( XYChart chart, ReplayData r )
     {
         chart.setXAxisTitle( "Time (s)" );
         chart.setYAxisTitle( "Steering" );
@@ -141,35 +215,20 @@ public final class ReplayChart
         chart.getStyler().setYAxisMax( max_steering );
         chart.getStyler().setYAxisMin( min_steering );
         chart.getStyler().setZoomEnabled( true );
-        chart.getStyler().setXAxisLabelRotation(30);
+        chart.getStyler().setXAxisLabelRotation( 30 );
 
-        chart.getStyler().setxAxisTickLabelsFormattingFunction( aDouble ->
+        chart.getStyler().setxAxisTickLabelsFormattingFunction( aDouble -> formatTime( aDouble ) );
+
+        double offset = r.getReplayTime() < 30000 ? -500 : -1000;
+        if ( !invertSteering )
         {
-            String value = aDouble.toString();
-            if ( value.equals( "0.0" ) )
-            {
-                return "0";
-            }
-
-            value = value.replaceAll( "0\\.0", "" ); //cut the 0.0
-            int length = value.length();
-
-            if( length < 3 )
-            {
-                return value;
-            }
-            return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
-        });
-
-        if( !invertSteering )
-        {
-            chart.addAnnotation( new AnnotationText( "Right", -1000, max_steering - 10000, false ) );
-            chart.addAnnotation( new AnnotationText( "Left", -1000, min_steering + 10000, false ) );
+            chart.addAnnotation( new AnnotationText( "Right", offset, max_steering - 10000, false ) );
+            chart.addAnnotation( new AnnotationText( "Left", offset, min_steering + 10000, false ) );
         }
         else
         {
-            chart.addAnnotation( new AnnotationText( "Left", -1000, max_steering + 10000, false ) );
-            chart.addAnnotation( new AnnotationText( "Right", -1000, min_steering - 10000, false ) );
+            chart.addAnnotation( new AnnotationText( "Left", offset, max_steering + 10000, false ) );
+            chart.addAnnotation( new AnnotationText( "Right", offset, min_steering - 10000, false ) );
         }
     }
 
@@ -182,11 +241,13 @@ public final class ReplayChart
     private ReplayData createDataset( String fileName )
     {
         ReplayData replayData = new ReplayData();
-        int lastTimeStamp = 0;
-        double lastSteering = 0.0;
 
         List<String> accelerationList = new ArrayList<>();
         List<String> brakeList = new ArrayList<>();
+        List<SteeringAction> steeringList = new ArrayList<>();
+
+        int padSteeringCounter = 0;
+        int keyboardSteeringCounter = 0;
 
         File file = new File( fileName );
         try ( BufferedReader br = new BufferedReader( new FileReader( file ) ) )
@@ -198,43 +259,13 @@ public final class ReplayChart
 
                 if ( isInteger( parts[0] ) ) //pad steering
                 {
-                    replayData.setType( "Pad" );
-                    int currentTime = Integer.parseInt( parts[0] );
-                    if ( currentTime > lastTimeStamp + 10 ) //timestamps are missing
-                    {
-                        while ( lastTimeStamp + 10 < currentTime )
-                        {
-                            replayData.addSteering( lastSteering );
-                            lastTimeStamp = lastTimeStamp + 10;
-                        }
-                    }
-
-                    lastSteering = Integer.parseInt( parts[2] );
-                    replayData.addSteering( lastSteering );
-                    lastTimeStamp = currentTime;
+                    steeringList.add( new SteeringAction( parts[0], parts[2] ) );
+                    padSteeringCounter++;
                 }
                 else if ( parts[0].contains( "-" ) && (parts[2].equals( "left" ) || parts[2].equals( "right" )) ) //keyboard steering
                 {
-                    replayData.setType( "Keyboard" );
-                    int startTime = Integer.parseInt( parts[0].split( "-" )[0] );
-                    int endTime = Integer.parseInt( parts[0].split( "-" )[1] );
-                    double steer = 0;
-
-                    while ( lastTimeStamp + 10 < startTime ) //fill the time that passed since the last steering command with no steering
-                    {
-                        replayData.addSteering( steer );
-                        lastTimeStamp = lastTimeStamp + 10;
-                    }
-
-                    steer = parts[2].equals( "left" ) ? -65536 : 65536; // keyboards can only fullsteer
-                    for ( int i = startTime; i <= endTime; i = i + 10 )
-                    {
-                        replayData.addSteering( steer );
-                    }
-                    if ( endTime > lastTimeStamp )
-                    {
-                        lastTimeStamp = endTime;
-                    }
+                    steeringList.add( new SteeringAction( parts[0], parts[2] ) );
+                    keyboardSteeringCounter++;
                 }
                 else if ( parts[2].equals( "up" ) ) //acceleration
                 {
@@ -246,20 +277,37 @@ public final class ReplayChart
                 }
             }
 
-            int totalTime = replayData.getSteeringLegth() * 10;
-            for ( int i = 0; i < totalTime; i = i + 10 ) //add a timestamp for the x-axis for every 10ms to please XChart
+            calculateReplayLength( steeringList, accelerationList, brakeList, replayData );
+
+            for ( int i = 0; i < replayData.getReplayTime(); i = i + 10 ) //add a timestamp for the x-axis for every 10ms to please XChart
             {
                 replayData.addTimestamp( i );
             }
 
-            if( !overlaySteering ) // don't show acceleration and brake in overlay mode
+            if ( padSteeringCounter != 0 && keyboardSteeringCounter != 0 )
             {
-                extractAccelerationOrBrake( true, accelerationList, replayData, totalTime );
-                extractAccelerationOrBrake( false, brakeList, replayData, totalTime );
+                System.err.println( "Mixed ( Pad + Keyboard ) runs are not supported yet!" );
+                return new ReplayData();
+            }
+            else if ( padSteeringCounter > keyboardSteeringCounter )
+            {
+                replayData.setType( E_SteeringType.PAD );
+                extractPadSteering( steeringList, replayData );
+            }
+            else
+            {
+                replayData.setType( E_SteeringType.KEYBOARD );
+                extractKeyboardSteering( steeringList, replayData );
+            }
+
+            if ( !overlaySteering ) // don't show acceleration and brake in overlay mode
+            {
+                extractAccelerationOrBrake( true, accelerationList, replayData );
+                extractAccelerationOrBrake( false, brakeList, replayData );
             }
 
             String[] fileNameParts = fileName.split( "/" );
-            replayData.setName( fileNameParts[fileNameParts.length - 1] );
+            replayData.setFileName( fileNameParts[fileNameParts.length - 1] );
         }
         catch ( Throwable e )
         {
@@ -269,13 +317,129 @@ public final class ReplayChart
         return replayData;
     }
 
-    private void extractAccelerationOrBrake( boolean isAcceleration, List<String> inputList, ReplayData replayData, int totalTime )
+    /**
+     * extracts the steering inputs
+     *
+     * @param steeringList
+     * @param replayData
+     */
+    private void extractPadSteering( List<SteeringAction> steeringList, ReplayData replayData )
+    {
+        int lastTimeStamp = 0;
+        double lastSteering = 0.0;
+
+        for ( SteeringAction input : steeringList )
+        {
+            int currentTime = Integer.parseInt( input.getTime() );
+
+            while ( lastTimeStamp + 10 < currentTime ) //timestamps are missing
+            {
+                replayData.addSteering( lastSteering );
+                lastTimeStamp = lastTimeStamp + 10;
+            }
+
+            lastSteering = Integer.parseInt( input.getValue() );
+            replayData.addSteering( lastSteering );
+            lastTimeStamp = currentTime;
+        }
+
+        while ( replayData.getSteeringLegth() * 10 < replayData.getReplayTime() ) //fill rest of the replay with same steering
+        {
+            replayData.addSteering( lastSteering );
+        }
+    }
+
+    /**
+     * extracts the steering input
+     *
+     * @param steeringList
+     * @param replayData
+     */
+    private void extractKeyboardSteering( List<SteeringAction> steeringList, ReplayData replayData )
+    {
+        int lastTimeStamp = 0;
+
+        for ( SteeringAction input : steeringList )
+        {
+            double steer = 0;
+
+            int startTime = Integer.parseInt( input.getTime().split( "-" )[0] );
+            int endTime = Integer.parseInt( input.getTime().split( "-" )[1] );
+
+            while ( lastTimeStamp + 10 < startTime ) //fill the time that passed since the last steering command with no steering
+            {
+                replayData.addSteering( steer );
+                lastTimeStamp = lastTimeStamp + 10;
+            }
+
+            if ( startTime <= lastTimeStamp ) //left and right are pressed at the same time
+            {
+                startTime = lastTimeStamp + 10; //start when only one button is pressed
+                //TODO not accurate, since pressing both left and right at the same time results in going LEFT
+            }
+
+            steer = input.getValue().equals( "left" ) ? -65536 : 65536; // keyboards can only fullsteer
+            for ( int i = startTime; i <= endTime; i = i + 10 )
+            {
+                replayData.addSteering( steer );
+            }
+            if ( endTime > lastTimeStamp )
+            {
+                lastTimeStamp = endTime;
+            }
+        }
+
+        while ( replayData.getSteeringLegth() * 10 < replayData.getReplayTime() ) //fill rest of the replay with no steering
+        {
+            replayData.addSteering( 0.0 );
+        }
+    }
+
+    /**
+     * finds the latest timestamp in the input
+     *
+     * @param steeringList
+     * @param accelerationList
+     * @param brakeList
+     * @param replayData
+     */
+    private void calculateReplayLength( List<SteeringAction> steeringList, List<String> accelerationList, List<String> brakeList,
+            ReplayData replayData )
+    {
+        SteeringAction lastSteerPair = steeringList.get( steeringList.size() - 1 );
+        String lastAccelerationString = accelerationList.get( accelerationList.size() - 1 );
+        String lastBrakeString = brakeList.get( brakeList.size() - 1 );
+
+        int lastAcceleration = Integer.parseInt( lastAccelerationString.split( "-" )[1] );
+        int lastBrake = Integer.parseInt( lastBrakeString.split( "-" )[1] );
+
+        int lastSteer = 0;
+        if ( lastSteerPair.getTime().contains( "-" ) ) // keyboard
+        {
+            lastSteer = Integer.parseInt( lastSteerPair.getTime().split( "-" )[1] );
+        }
+        else //pad
+        {
+            lastSteer = Integer.parseInt( lastSteerPair.getTime() );
+        }
+
+        replayData.setReplayTime( Math.max( Math.max( lastAcceleration, lastBrake ), lastSteer ) );
+    }
+
+    /**
+     * extract the brake / acceleration inputs
+     *
+     * @param isAcceleration
+     * @param inputList
+     * @param replayData
+     */
+    private void extractAccelerationOrBrake( boolean isAcceleration, List<String> inputList, ReplayData replayData )
     {
         int lastTime = 0;
 
         if ( inputList.isEmpty() && isAcceleration )
         {
-            inputList.add( "0-0" ); //some runs don't have acceleration at all, assume it was pressed all the time
+            inputList.add( "0-0" ); //ESWC runs sometimes? don't have acceleration at all, assume it was pressed all the time
         }
 
         for ( String s : inputList )
@@ -299,9 +463,10 @@ public final class ReplayChart
                 }
             }
 
-            if ( endTime == 0 || endTime > totalTime ) //key is pressed until the end of the run
+            //ESWC runs that press acceleration in the complete run show 0-0
+            if ( endTime == 0 || endTime > replayData.getReplayTime() )
             {
-                endTime = totalTime;
+                endTime = replayData.getReplayTime();
             }
 
             if ( endTime != 0 ) //key is not pressed until the end of the run
@@ -321,9 +486,10 @@ public final class ReplayChart
                 }
             }
 
-            if ( inputList.indexOf( s ) == inputList.size() - 1 && endTime < totalTime ) //is the last input && run is not over yet
+            if ( inputList.indexOf( s ) == inputList.size() - 1 && endTime < replayData
+                    .getReplayTime() ) //is the last input && run is not over yet
             {
-                while ( lastTime < totalTime ) //fill rest of the run with no input
+                while ( lastTime < replayData.getReplayTime() ) //fill rest of the run with no input
                 {
                     if ( isAcceleration )
                     {
@@ -339,6 +505,12 @@ public final class ReplayChart
         }
     }
 
+    /**
+     * checks if string is integer
+     *
+     * @param s
+     * @return
+     */
     public static boolean isInteger( String s )
     {
         try
@@ -350,5 +522,29 @@ public final class ReplayChart
             return false;
         }
         return true;
+    }
+
+    /**
+     * formats the time
+     *
+     * @param aDouble
+     * @return
+     */
+    public static String formatTime( Double aDouble )
+    {
+        String value = aDouble.toString();
+        if ( value.equals( "0.0" ) )
+        {
+            return "0";
+        }
+
+        value = value.replaceAll( "0\\.0", "" ); //cut the 0.0
+        int length = value.length();
+
+        if ( length < 3 )
+        {
+            return value;
+        }
+        return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
     }
 }

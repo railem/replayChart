@@ -8,8 +8,10 @@ import java.util.List;
  */
 public class ReplayData
 {
-    private String       name;
-    private String       type;
+    private String         fileName;
+    private E_SteeringType type;
+    private int            replayTime;
+
     private List<Double> steering;
     private List<Double> acceleration;
     private List<Double> brake;
@@ -28,19 +30,14 @@ public class ReplayData
         return steering.size();
     }
 
-    public int getTimestampsLegth()
-    {
-        return timestamps.size();
-    }
-
     public double[] getSteering()
     {
-        return listToArray( steering );
+        return steering.isEmpty() ? null : listToArray( steering );
     }
 
     public double[] getTimestamps()
     {
-        return listToArray( timestamps );
+        return timestamps.isEmpty() ? null : listToArray( timestamps );
     }
 
     public void addSteering( double d )
@@ -53,28 +50,34 @@ public class ReplayData
         timestamps.add( d );
     }
 
-    public String getTitle()
+    public String getChartTitle()
     {
-        return name + " [" + type + "]";
+        return fileName;
     }
 
-    public void setName( String name )
+    public String getChartTitleShort()
     {
-        this.name = name;
+        return fileName + " [" + type.name() + "] [" + ReplayChart.formatTime( (double) replayTime ) + "]";
     }
 
-    public void setType( String type )
+    public void setFileName( String name )
+    {
+        this.fileName = name;
+    }
+
+    public void setType( E_SteeringType type )
     {
         this.type = type;
     }
+
     public double[] getAcceleration()
     {
-        return listToArray( acceleration );
+        return acceleration.isEmpty() ? null : listToArray( acceleration );
     }
 
     public double[] getBrake()
     {
-        return listToArray( brake );
+        return brake.isEmpty() ? null : listToArray( brake );
     }
 
     public void addAcceleration( double d )
@@ -85,6 +88,21 @@ public class ReplayData
     public void addBrake( double d )
     {
         brake.add( d );
+    }
+
+    public int getReplayTime()
+    {
+        return replayTime;
+    }
+
+    public void setReplayTime( int replayTime )
+    {
+        this.replayTime = replayTime;
+    }
+
+    public E_SteeringType getType()
+    {
+        return type;
     }
 
     private double[] listToArray( List<Double> list )

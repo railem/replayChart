@@ -46,5 +46,19 @@ This example visualizes the given input files in the same chart:
 ![](https://i.imgur.com/1bOe5gR.png"")
 
 ## Known Issues
-- Driving on pad with a d-pad (partially or fully) might mark the run as keyboard.
-- The last seconds of some replays are missing sometimes, this is hard to overcome since I don't have the actual time of the run. So if someone hasn't steered in the last 10 seconds of the run, it won't be shown.
+- Driving keyboard/d-pad and pad mixed is currently not supported.
+- ESWC replay times and graphs are not displayed correctly. They might end too soon.
+
+## Changelog
+
+### 1.1
+- added brake and throttle graphs to chart
+- improved legend & labels
+- renamed -overlay parameter to -o
+- added zoom feature
+- added invert parameter (-i)
+
+### 1.2
+- made the graph calculation more accurate
+- added replay time display
+- moved legend into the chart on overlay mode
