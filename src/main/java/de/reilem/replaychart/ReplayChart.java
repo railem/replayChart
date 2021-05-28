@@ -66,6 +66,7 @@ public final class ReplayChart
         if ( overlaySteering ) //overlay all datasets in one chart
         {
             XYChart steeringChart = new XYChartBuilder().width( 1440 ).height( 320 ).build();
+            steeringChart.getStyler().setTheme( new ReplayTheme() );
 
             initChart( steeringChart, replays.get( 0 ) );
             steeringChart.getStyler().setLegendPosition( Styler.LegendPosition.InsideNW );
@@ -88,7 +89,8 @@ public final class ReplayChart
             List<XYChart> charts = new ArrayList<>();
             replays.forEach( r ->
             {
-                XYChart chart = new XYChartBuilder().width( 1440 ).height( 200 ).theme( Styler.ChartTheme.XChart ).build();
+                XYChart chart = new XYChartBuilder().width( 1440 ).height( 200 ).build();
+                chart.getStyler().setTheme( new ReplayTheme() );
                 initChart( chart, r );
                 chart.getStyler().setLegendVisible( false );
                 chart.setTitle( r.getChartTitle() );
