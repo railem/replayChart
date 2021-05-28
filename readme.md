@@ -62,3 +62,4 @@ This example visualizes the given input files in the same chart:
 - made the graph calculation more accurate
 - added replay time display
 - moved legend into the chart on overlay mode
+- added label showing the time spend pressing acceleration & brake in percent

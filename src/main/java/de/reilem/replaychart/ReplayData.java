@@ -17,12 +17,17 @@ public class ReplayData
     private List<Double> brake;
     private List<Double> timestamps;
 
+    private int timeOnThrottle;
+    private int timeOnBrake;
+
     public ReplayData()
     {
         steering = new ArrayList<>();
         acceleration = new ArrayList<>();
         brake = new ArrayList<>();
         timestamps = new ArrayList<>();
+        timeOnThrottle = 0;
+        timeOnBrake = 0;
     }
 
     public int getSteeringLegth()
@@ -103,6 +108,36 @@ public class ReplayData
     public E_SteeringType getType()
     {
         return type;
+    }
+
+    public int getTimeOnThrottle()
+    {
+        return timeOnThrottle;
+    }
+
+    public int getTimeOnBrake()
+    {
+        return timeOnBrake;
+    }
+
+    public void addThrottle()
+    {
+        timeOnThrottle = timeOnThrottle + 10;
+    }
+
+    public void addBrake()
+    {
+        timeOnBrake = timeOnBrake + 10;
+    }
+
+    public String getPercentTimeOnThrottle()
+    {
+        return "Throttle: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) timeOnThrottle / (double) replayTime) * 100 ) + "%]";
+    }
+
+    public String getPercentTimeOnBrake()
+    {
+        return "Brake: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) timeOnBrake / (double) replayTime) * 100 ) + "%]";
     }
 
     private double[] listToArray( List<Double> list )

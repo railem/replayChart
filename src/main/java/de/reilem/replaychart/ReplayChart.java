@@ -11,6 +11,8 @@ import java.awt.event.ComponentEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.List;
 
@@ -195,10 +197,17 @@ public final class ReplayChart
 
         //device & time
         AnnotationText deviceLegend = new AnnotationText(
-                "Device: [" + r.getType().name() + "]        Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
-                , r.getReplayTime() - r.getReplayTime() / 6, max_steering + 16000, false );
+                "Device: [" + r.getType().name() + "]   Time: [" + formatTime( (double) r.getReplayTime() ) + "]"
+                , r.getReplayTime() / 6, max_steering + 16000, false );
         deviceLegend.setFontColor( Color.BLACK );
         chart.addAnnotation( deviceLegend );
+
+        //device & time
+        AnnotationText timeOnLegend = new AnnotationText(
+                r.getPercentTimeOnThrottle() + "   " + r.getPercentTimeOnBrake()
+                , r.getReplayTime() - r.getReplayTime() / 6, max_steering + 16000, false );
+        timeOnLegend.setFontColor( Color.BLACK );
+        chart.addAnnotation( timeOnLegend );
     }
 
     /**
@@ -476,10 +485,12 @@ public final class ReplayChart
                     if ( isAcceleration )
                     {
                         replayData.addAcceleration( max_steering );
+                        replayData.addThrottle();
                     }
                     else
                     {
                         replayData.addBrake( min_steering );
+                        replayData.addBrake();
                     }
 
                     lastTime = lastTime + 10;
@@ -546,5 +557,17 @@ public final class ReplayChart
             return value;
         }
         return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
+    }
+
+    /**
+     * rounds to two decimal places
+     * @param value
+     * @return
+     */
+    public static double roundDoubleTwoDecimalPlaces( double value )
+    {
+        BigDecimal bd = BigDecimal.valueOf( value );
+        bd = bd.setScale( 2, RoundingMode.HALF_UP );
+        return bd.doubleValue();
     }
 }
