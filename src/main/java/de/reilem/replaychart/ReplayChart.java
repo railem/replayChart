@@ -67,20 +67,19 @@ public final class ReplayChart
         {
             XYChart steeringChart = new XYChartBuilder().width( 1440 ).height( 320 ).build();
             steeringChart.getStyler().setTheme( new ReplayTheme() );
-
             initChart( steeringChart, replays.get( 0 ) );
             steeringChart.getStyler().setLegendPosition( Styler.LegendPosition.InsideNW );
             replays.forEach( r ->
                     steeringChart.addSeries( r.getChartTitleShort(), r.getTimestamps(), r.getSteering() ).setMarker( SeriesMarkers.NONE ) );
             JFrame frame = new SwingWrapper( steeringChart ).displayChart();
             frame.setMinimumSize( new Dimension( 900, 320 ) );
-            resizeLegend( frame, steeringChart );
+            resizeLegend( frame, steeringChart, replays.size() );
 
             frame.addComponentListener( new ComponentAdapter()
             {
                 public void componentResized( ComponentEvent evt )
                 {
-                    resizeLegend( frame, steeringChart );
+                    resizeLegend( frame, steeringChart, replays.size() );
                 }
             } );
         }
@@ -116,6 +115,7 @@ public final class ReplayChart
                 if ( r.getSteering() != null )
                 {
                     XYSeries steeringSeries = chart.addSeries( "Steering", r.getTimestamps(), r.getSteering() );
+                    steeringSeries.setLineWidth( 1.4f );
                     steeringSeries.setMarker( SeriesMarkers.NONE );
                     steeringSeries.setLineColor( Color.BLACK );
                 }
@@ -131,41 +131,41 @@ public final class ReplayChart
 
     /**
      * resizes the max/min of the x-axis to fit the legend in the graph
-     *
-     * @param frame
+     *  @param frame
      * @param chart
+     * @param size
      */
-    private void resizeLegend( JFrame frame, XYChart chart )
+    private void resizeLegend( JFrame frame, XYChart chart, int size )
     {
         int height = frame.getHeight();
         if ( !invertSteering )
         {
             if ( height < 400 )
             {
-                chart.getStyler().setYAxisMax( max_steering + (40000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering + ( ( 10000000 * size ) / frame.getHeight()) );
             }
             else if ( height < 500 )
             {
-                chart.getStyler().setYAxisMax( max_steering + (29000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering + ( ( 7250000 * size ) / frame.getHeight()) );
             }
             else
             {
-                chart.getStyler().setYAxisMax( max_steering + (20000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering + ( ( 5000000 * size ) / frame.getHeight()) );
             }
         }
         else
         {
             if ( height < 400 )
             {
-                chart.getStyler().setYAxisMax( max_steering - (40000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering - ( ( 10000000 * size ) / frame.getHeight()) );
             }
             else if ( height < 500 )
             {
-                chart.getStyler().setYAxisMax( max_steering - (29000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering - ( ( 7250000 * size ) / frame.getHeight()) );
             }
             else
             {
-                chart.getStyler().setYAxisMax( max_steering - (20000000 / frame.getHeight()) );
+                chart.getStyler().setYAxisMax( max_steering - ( ( 5000000 * size ) / frame.getHeight()) );
             }
         }
     }
@@ -182,7 +182,7 @@ public final class ReplayChart
         AnnotationText brakeLegend;
         AnnotationText deviceLegend;
         AnnotationText timeOnLegend;
-        double offset = r.getReplayTime() < 30000 ? 500 : 1000;
+        double offset = r.getReplayTime() < 30000 ? 500 : 1100;
 
         if ( !invertSteering )
         {
@@ -236,8 +236,6 @@ public final class ReplayChart
         chart.getStyler().setXAxisTitleVisible( false );
         chart.getStyler().setYAxisMax( max_steering );
         chart.getStyler().setYAxisMin( min_steering );
-        chart.getStyler().setZoomEnabled( true );
-        //chart.getStyler().setXAxisLabelRotation( 30 );
 
         chart.getStyler().setxAxisTickLabelsFormattingFunction( aDouble -> formatTimeFullSecond( aDouble, r ) );
 
@@ -254,6 +252,23 @@ public final class ReplayChart
         }
         chart.addAnnotation( new AnnotationText( "Steering", offset, 0, false ) );
         chart.getStyler().setXAxisMin( r.getReplayTime() < 30000 ? -500.0 : -1000.0 );
+
+        //min max lines
+        AnnotationLine maxY = new AnnotationLine( max_steering , false, false );
+        maxY.setColor( new Color( 0, 0, 0, 40 ) );
+        chart.addAnnotation( maxY );
+
+        AnnotationLine minY = new AnnotationLine( min_steering, false, false );
+        minY.setColor( new Color( 0, 0, 0, 40 ) );
+        chart.addAnnotation( minY );
+
+        AnnotationLine minX = new AnnotationLine( 0, true, false );
+        minX.setColor( new Color( 0, 0, 0, 40 ) );
+        chart.addAnnotation( minX );
+
+        AnnotationLine maxX = new AnnotationLine( r.getReplayTime(), true, false );
+        maxX.setColor( new Color( 0, 0, 0, 40 ) );
+        chart.addAnnotation( maxX );
     }
 
     /**

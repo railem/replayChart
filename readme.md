@@ -64,3 +64,4 @@ This example visualizes the given input files in the same chart:
 - moved legend into the chart on overlay mode
 - added label showing the time spend pressing acceleration & brake in percent
 - added custom theme for a clean for a look
+- drawing custom lines to help orientation
