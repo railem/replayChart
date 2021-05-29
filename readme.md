@@ -10,7 +10,7 @@ In order to produce data that this tool can read, use donadigo's [generate_input
 Before we go into the examples, I'd like to point out that nothing suspicious is going on the in these example screenshots,
 but we can see how different everyone is using their device :)
 
-### [Download the latest Release [v1.1]](https://github.com/railem/replayChart/releases/download/1.1/replayChart-1.1.jar)
+### [Download the latest Release [v1.2]](https://github.com/railem/replayChart/releases/download/1.2/replayChart-1.2.jar)
 
 ## Parameters
 `-o` - Overlays the steering of multiple replays in one chart.<br>
