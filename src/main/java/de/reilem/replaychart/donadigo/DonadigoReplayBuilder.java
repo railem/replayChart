@@ -87,7 +87,9 @@ public class DonadigoReplayBuilder
                 extractAccelerationOrBrake( false, brakeList, replayData );
             }
 
-            String[] fileNameParts = fileName.split( "/" );
+
+            String seperator = System.getProperty("os.name").toLowerCase().contains( "win" ) ? "\\" : "/";
+            String[] fileNameParts = fileName.split( seperator );
             replayData.setFileName( fileNameParts[fileNameParts.length - 1] );
         }
         catch ( Throwable e )

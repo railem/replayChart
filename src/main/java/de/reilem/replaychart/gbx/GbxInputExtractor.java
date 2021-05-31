@@ -156,7 +156,8 @@ public class GbxInputExtractor
 
     private static String extractReplayName( String replayFilePath )
     {
-        String[] filePathParts = replayFilePath.split( "/" );
+        String seperator = System.getProperty("os.name").toLowerCase().contains( "win" ) ? "\\" : "/";
+        String[] filePathParts = replayFilePath.split( seperator );
         String fileName = filePathParts[filePathParts.length - 1];
         return fileName.substring( 0, fileName.length() - 11 );
     }
