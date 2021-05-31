@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>replayChart</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -18,6 +18,16 @@
             <groupId>org.knowm.xchart</groupId>
             <artifactId>xchart</artifactId>
             <version>3.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.anarres.lzo</groupId>
+            <artifactId>lzo-core</artifactId>
+            <version>1.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
         </dependency>
     </dependencies>
 
@@ -34,7 +44,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>de.reilem.replaychart.ReplayChart</mainClass>
+                            <mainClass>de.reilem.replaychart.MainWindow</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -47,7 +57,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>de.reilem.replaychart.ReplayChart</mainClass>
+                                    <mainClass>de.reilem.replaychart.MainWindow</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

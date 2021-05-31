@@ -1,5 +1,7 @@
 package de.reilem.replaychart;
 
+import de.reilem.replaychart.gbx.E_TmVersion;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,14 +13,18 @@ public class ReplayData
     private String         fileName;
     private E_SteeringType type;
     private int            replayTime;
+    private E_TmVersion    tmVersion;
 
-    private List<Double> steering;
-    private List<Double> acceleration;
-    private List<Double> brake;
-    private List<Double> timestamps;
+    private List<Double>  steering;
+    private List<Double>  acceleration;
+    private List<Double>  brake;
+    private List<Double>  timestamps;
+    private List<Integer> respawns;
 
     private int timeOnThrottle;
     private int timeOnBrake;
+    private int keyboardSteers;
+    private int padSteers;
 
     public ReplayData()
     {
@@ -26,8 +32,11 @@ public class ReplayData
         acceleration = new ArrayList<>();
         brake = new ArrayList<>();
         timestamps = new ArrayList<>();
+        respawns = new ArrayList<>();
         timeOnThrottle = 0;
         timeOnBrake = 0;
+        keyboardSteers = 0;
+        padSteers = 0;
     }
 
     public int getSteeringLegth()
@@ -62,7 +71,7 @@ public class ReplayData
 
     public String getChartTitleShort()
     {
-        return fileName + " [" + type.name() + "] [" + ReplayChart.formatTime( (double) replayTime ) + "]";
+        return fileName + " [" + type.name() + "] [" + ReplayChart.formatTime( (double) replayTime, tmVersion ) + "]";
     }
 
     public void setFileName( String name )
@@ -105,9 +114,20 @@ public class ReplayData
         this.replayTime = replayTime;
     }
 
-    public E_SteeringType getType()
+    public String getType()
     {
-        return type;
+        if ( padSteers > keyboardSteers )
+        {
+            type = E_SteeringType.DIGITAL;
+            return type + " (" + ReplayChart.roundDoubleTwoDecimalPlaces(
+                    ((double) padSteers / (double) (padSteers + keyboardSteers)) * 100 ) + "%)";
+        }
+        else
+        {
+            type = E_SteeringType.ANALOG;
+            return type + " (" + ReplayChart.roundDoubleTwoDecimalPlaces(
+                    ((double) keyboardSteers / (double) (padSteers + keyboardSteers)) * 100 ) + "%)";
+        }
     }
 
     public int getTimeOnThrottle()
@@ -120,24 +140,55 @@ public class ReplayData
         return timeOnBrake;
     }
 
-    public void addThrottle()
+    public void addThrottleAction()
     {
-        timeOnThrottle = timeOnThrottle + 10;
+        timeOnThrottle++;
     }
 
-    public void addBrake()
+    public void addBrakeAction()
     {
-        timeOnBrake = timeOnBrake + 10;
+        timeOnBrake++;
+    }
+
+    public void addPadAction()
+    {
+        padSteers++;
+    }
+
+    public void addKeyboardAction()
+    {
+        keyboardSteers++;
+    }
+
+    public List<Integer> getRespawns()
+    {
+        return respawns;
+    }
+
+    public void addRespawn( int time )
+    {
+        respawns.add( time );
+    }
+
+    public E_TmVersion getTmVersion()
+    {
+        return tmVersion;
+    }
+
+    public void setTmVersion( E_TmVersion tmVersion )
+    {
+        this.tmVersion = tmVersion;
     }
 
     public String getPercentTimeOnThrottle()
     {
-        return "Throttle: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) timeOnThrottle / (double) replayTime) * 100 ) + "%]";
+        return "Throttle: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) (timeOnThrottle * 10) / (double) replayTime) * 100 )
+                + "%]";
     }
 
     public String getPercentTimeOnBrake()
     {
-        return "Brake: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) timeOnBrake / (double) replayTime) * 100 ) + "%]";
+        return "Brake: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) (timeOnBrake * 10) / (double) replayTime) * 100 ) + "%]";
     }
 
     private double[] listToArray( List<Double> list )
