@@ -60,7 +60,7 @@ Can be used multiple times to add more than one file.
 - drawing custom lines to help orientation
 - removed broken zoom feature 
 
-### 1.3
+### 1.4
 - showing the percentage of the run driven on each device
 - added support for replay.gbx input extraction
 - added gui
