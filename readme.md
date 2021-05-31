@@ -14,7 +14,7 @@ Supported TrackMania version: TMO, TMS, TMN ESWC, TMNF, TMUF, TM2
 ### [Download the latest Release [v1.3]](https://github.com/railem/replayChart/releases/download/1.3/replayChart-1.3.jar)
 
 ## Tool Usage
-In order to run the Tool ou need to execute it via `java -jar replayChart-1.4.jar`.<br>
+In order to run the Tool you need to either run it via double-click or execute it via `java -jar replayChart-1.3.jar`.<br>
 You can then select the replays you want to analyze.
 
 
