@@ -7,6 +7,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -156,8 +157,8 @@ public class GbxInputExtractor
 
     private static String extractReplayName( String replayFilePath )
     {
-        String seperator = System.getProperty("os.name").toLowerCase().contains( "win" ) ? "\\" : "/";
-        String[] filePathParts = replayFilePath.split( seperator );
+        String separator = System.getProperty("file.separator");
+        String[] filePathParts = replayFilePath.split( separator );
         String fileName = filePathParts[filePathParts.length - 1];
         return fileName.substring( 0, fileName.length() - 11 );
     }

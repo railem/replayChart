@@ -88,8 +88,8 @@ public class DonadigoReplayBuilder
             }
 
 
-            String seperator = System.getProperty("os.name").toLowerCase().contains( "win" ) ? "\\" : "/";
-            String[] fileNameParts = fileName.split( seperator );
+            String separator = System.getProperty("file.separator");
+            String[] fileNameParts = fileName.split( separator );
             replayData.setFileName( fileNameParts[fileNameParts.length - 1] );
         }
         catch ( Throwable e )
