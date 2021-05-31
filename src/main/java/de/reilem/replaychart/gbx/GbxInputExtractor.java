@@ -158,8 +158,7 @@ public class GbxInputExtractor
     private static String extractReplayName( String replayFilePath )
     {
         String separator = System.getProperty("file.separator");
-        String[] filePathParts = replayFilePath.split( separator );
-        String fileName = filePathParts[filePathParts.length - 1];
+        String fileName = replayFilePath.substring( replayFilePath.lastIndexOf( separator ) +1 );
         return fileName.substring( 0, fileName.length() - 11 );
     }
 
