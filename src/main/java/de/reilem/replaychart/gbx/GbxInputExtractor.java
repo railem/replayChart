@@ -7,7 +7,6 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -159,7 +158,7 @@ public class GbxInputExtractor
     {
         String separator = System.getProperty("file.separator");
         String fileName = replayFilePath.substring( replayFilePath.lastIndexOf( separator ) +1 );
-        return fileName.substring( 0, fileName.length() - 11 );
+        return fileName.substring( 0, fileName.toLowerCase().lastIndexOf( ".r" ) );
     }
 
     private static byte[] decompress( byte[] src, int compressedSize, int uncompressedSize ) throws IOException

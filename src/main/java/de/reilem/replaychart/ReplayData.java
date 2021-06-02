@@ -191,7 +191,7 @@ public class ReplayData
         return "Brake: [" + ReplayChart.roundDoubleTwoDecimalPlaces( ((double) (timeOnBrake * 10) / (double) replayTime) * 100 ) + "%]";
     }
 
-    private double[] listToArray( List<Double> list )
+    public static double[] listToArray( List<Double> list )
     {
         double[] array = new double[list.size()];
         for ( int i = 0; i < array.length; i++ )

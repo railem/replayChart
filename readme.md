@@ -14,19 +14,15 @@ Supported TrackMania version: TMO, TMS, TMN ESWC, TMNF, TMUF, TM2
 ### [Download the latest Release [v1.3]](https://github.com/railem/replayChart/releases/download/1.3/replayChart-1.3.jar)
 
 ## Tool Usage
-In order to run the Tool you need to either run it via double-click or execute it via `java -jar replayChart-1.3.jar`.<br>
+In order to run the Tool you need to either run it via double-click or execute it via `java -jar replayChart-1.4.jar`.<br>
 You can then select the replays you want to analyze.
 
 
-## Example 1 (TMNF - ESL-Hockolicious)
+## Example 1 (TMNF - D07-Race)
 
-![](https://i.imgur.com/IKrcuCQ.png"")
+![](https://i.imgur.com/OQEQ0Kx.png"")
 
-## Example 2 (TMUF Coast - C3)
-
-![](https://i.imgur.com/Nc88023.png"")
-
-## Example 3 (TMN ESWC - reRun)
+## Example 2 (TMN ESWC - reRun)
 
 ![](https://i.imgur.com/8R6Zzpc.png"")
 
@@ -38,6 +34,9 @@ Acceleration and brake, and other individual stats will not be displayed in this
 <br><br>
 `-i` - Inverts left and right.<br>
 Might help with orientation when following the timeline.
+<br><br>
+`-m` - Match Timeline.<br>
+Matches the timeline of all replays to improve the comparability.
 <br><br>
 `/path/to/file` - path to folder or replay to analyze.<br>
 Can be used multiple times to add more than one file.
@@ -65,3 +64,7 @@ Can be used multiple times to add more than one file.
 - added support for replay.gbx input extraction
 - added gui
 
+### 1.4
+- added match timeline (-m) feature
+- improved respawn marker
+- improved display of the race time

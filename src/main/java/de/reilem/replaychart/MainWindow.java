@@ -23,6 +23,7 @@ public class MainWindow extends javax.swing.JFrame
             List<String> arguments = new ArrayList<>( Arrays.asList( args ) );
             boolean overlaySteering = false;
             boolean invertSteering = false;
+            boolean matchTimeline = false;
 
             if ( arguments.contains( "-o" ) ) //check for overlay mode
             {
@@ -34,13 +35,19 @@ public class MainWindow extends javax.swing.JFrame
                 invertSteering = true;
                 arguments.remove( "-i" );
             }
+            if ( arguments.contains( "-m" ) ) //check for inverted steering mode
+            {
+                matchTimeline = true;
+                arguments.remove( "-m" );
+            }
 
-            new ReplayChart().init( arguments, overlaySteering, invertSteering, false );
+            new ReplayChart().init( arguments, overlaySteering, invertSteering, false, matchTimeline );
         }
     }
 
     private JCheckBox overlayCb;
     private JCheckBox invertCb;
+    private JCheckBox matchTimelineCb;
 
     private void start()
     {
@@ -53,7 +60,7 @@ public class MainWindow extends javax.swing.JFrame
         {
             //ignore it
         }
-        this.setTitle( "ReplayChart v1.3" );
+        this.setTitle( "ReplayChart v1.4" );
         this.setSize( 500, 210 );
         this.setResizable( false );
         centerWindow();
@@ -73,7 +80,7 @@ public class MainWindow extends javax.swing.JFrame
                 {
                     return true;
                 }
-                return f.getName().toLowerCase().endsWith( ".replay.gbx" );
+                return f.getName().toLowerCase().contains( ".replay" ) && f.getName().toLowerCase().contains( ".gbx" );
             }
 
             @Override public String getDescription()
@@ -92,11 +99,21 @@ public class MainWindow extends javax.swing.JFrame
 
         overlayCb = new JCheckBox( "Overlay in one chart" );
         panel.add( overlayCb );
-        overlayCb.setBounds( 10, 120, 180, 25 );
+        overlayCb.setBounds( 10, 120, 170, 25 );
+        overlayCb.setToolTipText( "Displays all selected replays in one chart. Only shows the steering movement!" );
 
         invertCb = new JCheckBox( "Invert Steering" );
         panel.add( invertCb );
-        invertCb.setBounds( 190, 120, 200, 25 );
+        invertCb.setBounds( 205, 120, 150, 25 );
+        invertCb.setToolTipText( "Inverts left and right steering in the chart. Useful to follow along the timeline easier!" );
+
+        matchTimelineCb = new JCheckBox( "Match Timeline" );
+        panel.add( matchTimelineCb );
+        matchTimelineCb.setBounds( 360, 120, 160, 25 );
+        matchTimelineCb.setToolTipText( "Matches the Timeline (X-Axis) of all selected replays. Eases the comparison of replays!" );
+
+        invertCb.setSelected( true );
+        matchTimelineCb.setSelected( true );
 
         JButton selectButton = new JButton( "Select Replays" );
         panel.add( selectButton );
@@ -111,7 +128,7 @@ public class MainWindow extends javax.swing.JFrame
                 List<String> arguments = new ArrayList<>();
                 Arrays.asList( files ).forEach( file -> arguments.add( file.getAbsolutePath() ) );
 
-                new ReplayChart().init( arguments, overlayCb.isSelected(), invertCb.isSelected(), true );
+                new ReplayChart().init( arguments, overlayCb.isSelected(), invertCb.isSelected(), true, matchTimelineCb.isSelected() );
             }
         } );
     }

@@ -18,22 +18,25 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public final class ReplayChart
 {
     private boolean overlaySteering = false;
     private boolean donadigoInput   = false;
     private boolean invertSteering  = false;
+    private boolean matchTimeline = false;
 
     private List<ReplayData> replays = new ArrayList<>();
 
     /**
      * read data and show charts
      */
-    public void init( List<String> arguments, boolean overlaySteering, boolean invertSteering, boolean isUiMode )
+    public void init( List<String> arguments, boolean overlaySteering, boolean invertSteering, boolean isUiMode, boolean matchTimeline )
     {
         this.overlaySteering = overlaySteering;
         this.invertSteering = invertSteering;
+        this.matchTimeline = matchTimeline;
         if ( donadigoInput )
         {
             if ( arguments.size() == 1 && new File( arguments.get( 0 ) ).isDirectory() ) //read all files in folder
@@ -89,7 +92,7 @@ public final class ReplayChart
         {
             XYChart steeringChart = new XYChartBuilder().width( 1440 ).height( 320 ).build();
             steeringChart.getStyler().setTheme( new ReplayTheme() );
-            initChart( steeringChart, replays.get( 0 ) );
+            initChart( steeringChart, replays.get( 0 ), -1, -1 );
             steeringChart.getStyler().setLegendPosition( Styler.LegendPosition.InsideNW );
             replays.forEach( r ->
                     steeringChart.addSeries( r.getChartTitleShort(), r.getTimestamps(), r.getSteering() ).setMarker( SeriesMarkers.NONE ) );
@@ -127,17 +130,56 @@ public final class ReplayChart
         else //render every dataset in separate chart
         {
             List<XYChart> charts = new ArrayList<>();
-            replays.forEach( r ->
+
+            int fastestTime = replays.get( 0 ).getReplayTime();
+            int slowestTime = replays.get( 0 ).getReplayTime();
+            for( ReplayData r : replays )
+            {
+                fastestTime = r.getReplayTime() < fastestTime ? r.getReplayTime() : fastestTime;
+                slowestTime = r.getReplayTime() > slowestTime ? r.getReplayTime() : slowestTime;
+            }
+
+            List<Double> timestampsLong = new ArrayList<>();
+            if( matchTimeline ) //create new timestamp list equal for all replays
+            {
+                double tsIndex = 0.0;
+                while ( tsIndex < slowestTime )
+                {
+                    timestampsLong.add( tsIndex );
+                    tsIndex += 10;
+                }
+            }
+
+            //sort by time
+            Collections.sort( replays, ( r1, r2 ) -> r1.getReplayTime() == r2.getReplayTime() ? 0 : r1.getReplayTime() < r2.getReplayTime() ? -1 : 1 );
+
+            for( ReplayData r : replays )
             {
                 XYChart chart = new XYChartBuilder().width( 1440 ).height( 200 ).build();
                 chart.getStyler().setTheme( new ReplayTheme() );
-                initChart( chart, r );
+                initChart( chart, r, fastestTime, charts.size()  );
                 chart.getStyler().setLegendVisible( false );
                 chart.setTitle( r.getChartTitle() );
 
                 if ( r.getAcceleration() != null )
                 {
-                    XYSeries accelerationSeries = chart.addSeries( "Acceleration", r.getTimestamps(), r.getAcceleration() );
+                    if( r.getTmVersion() == E_TmVersion.TM2 )
+                    {
+                        slowestTime = slowestTime - ( slowestTime % 10 );
+                    }
+                    if( matchTimeline && r.getReplayTime() < slowestTime )
+                    {
+                        int index = r.getReplayTime();
+
+                        while( index < slowestTime )
+                        {
+                            r.addAcceleration( 0.0 );
+                            index += 10;
+                        }
+                    }
+
+                    //create chart, use universal timestampList in align mode
+                    XYSeries accelerationSeries = chart.addSeries( "Acceleration", matchTimeline ? ReplayData.listToArray( timestampsLong ) : r.getTimestamps(), r.getAcceleration() );
                     accelerationSeries.setXYSeriesRenderStyle( XYSeries.XYSeriesRenderStyle.Area );
                     accelerationSeries.setMarker( SeriesMarkers.NONE );
                     accelerationSeries.setFillColor( new Color( 180, 255, 160 ) );
@@ -165,9 +207,9 @@ public final class ReplayChart
                     r.getRespawns().forEach( time -> drawRespawn( chart, time ) );
                 }
 
-                initCustomLegend( chart, r );
+                initCustomLegend( chart, r, matchTimeline ? slowestTime : r.getReplayTime() );
                 charts.add( chart );
-            } );
+            }
 
             JFrame frame = new SwingWrapper( charts, charts.size(), 1 ).setTitle( "Replay Chart" ).displayChartMatrix();
             frame.setMinimumSize( new Dimension( 1000, 160 * replays.size() ) );
@@ -203,45 +245,13 @@ public final class ReplayChart
     private void drawRespawn( XYChart chart, Integer time )
     {
         AnnotationLine respwnLine = new AnnotationLine( time, true, false );
-        respwnLine.setColor( new Color( 0, 150, 150, 150 ) );
+        respwnLine.setColor( new Color( 0, 100, 100, 180 ) );
         chart.addAnnotation( respwnLine );
 
-        Font font = new Font( Font.MONOSPACED, 0, 7 );
-
-        AnnotationText textR = new AnnotationText( "R", time + (time / 90), GbxSteeringInput.MAX - 10000, false );
-        textR.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textR.setTextFont( font );
+        AnnotationText textR = new AnnotationText( "    █ Respawn", time, GbxSteeringInput.MAX + 33000, false );
+        textR.setFontColor( new Color( 0, 100, 100, 255 ) );
+        textR.setTextFont( new Font( Font.MONOSPACED, 0, 10 ) );
         chart.addAnnotation( textR );
-
-        AnnotationText textE = new AnnotationText( "E", time + (time / 90), GbxSteeringInput.MAX - 17000, false );
-        textE.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textE.setTextFont( font );
-        chart.addAnnotation( textE );
-
-        AnnotationText textS = new AnnotationText( "S", time + (time / 90), GbxSteeringInput.MAX - 24000, false );
-        textS.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textS.setTextFont( font );
-        chart.addAnnotation( textS );
-
-        AnnotationText textP = new AnnotationText( "P", time + (time / 90), GbxSteeringInput.MAX - 31000, false );
-        textP.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textP.setTextFont( font );
-        chart.addAnnotation( textP );
-
-        AnnotationText textA = new AnnotationText( "A", time + (time / 90), GbxSteeringInput.MAX - 38000, false );
-        textA.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textA.setTextFont( font );
-        chart.addAnnotation( textA );
-
-        AnnotationText textW = new AnnotationText( "W", time + (time / 90), GbxSteeringInput.MAX - 45000, false );
-        textW.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textW.setTextFont( font );
-        chart.addAnnotation( textW );
-
-        AnnotationText textN = new AnnotationText( "N", time + (time / 90), GbxSteeringInput.MAX - 52000, false );
-        textN.setFontColor( new Color( 0, 100, 100, 180 ) );
-        textN.setTextFont( font );
-        chart.addAnnotation( textN );
     }
 
     /**
@@ -270,11 +280,11 @@ public final class ReplayChart
 
     /**
      * add acceleration and brake legend
-     *
-     * @param chart
+     *  @param chart
      * @param r
+     * @param time
      */
-    private void initCustomLegend( XYChart chart, ReplayData r )
+    private void initCustomLegend( XYChart chart, ReplayData r, int time )
     {
         AnnotationText accelerationLegend;
         AnnotationText brakeLegend;
@@ -282,16 +292,16 @@ public final class ReplayChart
         AnnotationText timeOnLegend;
         double offset = (r.getReplayTime() / 100) * 2;
 
-        accelerationLegend = new AnnotationText( "Throttle", r.getReplayTime() + offset, GbxSteeringInput.MAX - 10000, false );
-        brakeLegend = new AnnotationText( "Brake", r.getReplayTime() + offset, GbxSteeringInput.MIN + 10000, false );
+        accelerationLegend = new AnnotationText( "Throttle", time + offset, GbxSteeringInput.MAX - 10000, false );
+        brakeLegend = new AnnotationText( "Brake", time + offset, GbxSteeringInput.MIN + 10000, false );
 
         deviceLegend = new AnnotationText(
                 "Input: [" + r.getType() + "]   Time: [" + formatTime( (double) r.getReplayTime(), r.getTmVersion() ) + "]"
-                , r.getReplayTime() / 6, GbxSteeringInput.MAX + 16000, false );
+                , time / 6, GbxSteeringInput.MAX + 16000, false );
 
         timeOnLegend = new AnnotationText(
                 r.getPercentTimeOnThrottle() + "   " + r.getPercentTimeOnBrake()
-                , r.getReplayTime() - r.getReplayTime() / 6, GbxSteeringInput.MAX + 16000, false );
+                , r.getReplayTime() - time / 6, GbxSteeringInput.MAX + 16000, false );
 
         accelerationLegend.setFontColor( new Color( 60, 150, 40 ) );
         brakeLegend.setFontColor( new Color( 200, 80, 60 ) );
@@ -310,7 +320,7 @@ public final class ReplayChart
      * @param chart
      * @param r
      */
-    private void initChart( XYChart chart, ReplayData r )
+    private void initChart( XYChart chart, ReplayData r, int fastestTime, int replayIndex )
     {
         chart.setXAxisTitle( "Time (s)" );
         chart.setYAxisTitle( "Steering" );
@@ -356,6 +366,24 @@ public final class ReplayChart
         AnnotationLine maxX = new AnnotationLine( r.getReplayTime(), true, false );
         maxX.setColor( new Color( 0, 0, 0, 40 ) );
         chart.addAnnotation( maxX );
+
+        if( fastestTime != -1 )
+        {
+            AnnotationLine fastestTimeLine = new AnnotationLine( fastestTime, true, false );
+            fastestTimeLine.setColor( new Color( 70, 0, 160, 170 ) );
+            fastestTimeLine.setStroke( new BasicStroke(1.0f) );
+            chart.addAnnotation( fastestTimeLine );
+
+            if( replayIndex == 0 )// fastest replay
+            {
+                String spacer = r.getTmVersion() == E_TmVersion.TM2 ? "    " : "    ";
+                AnnotationText fastestTimeText = new AnnotationText( spacer + "█ " + formatTime( (double) r.getReplayTime(), r.getTmVersion() ) + "",
+                        fastestTime, GbxSteeringInput.MAX + 33000, false );
+                fastestTimeText.setFontColor( new Color( 60, 0, 130, 255 ) );
+                fastestTimeText.setTextFont( new Font( Font.MONOSPACED, 0, 10 ) );
+                chart.addAnnotation( fastestTimeText );
+            }
+        }
     }
 
     /**
@@ -366,29 +394,16 @@ public final class ReplayChart
      */
     public static String formatTime( Double aDouble, E_TmVersion tmVersion )
     {
-        String value;
-        if ( tmVersion != E_TmVersion.TM2 )
-        {
-            value = aDouble.toString().replaceAll( "0\\.0", "" ); //cut the 0.0
+        long m = TimeUnit.MILLISECONDS.toMinutes( aDouble.intValue() );
+        long s = TimeUnit.MILLISECONDS.toSeconds( aDouble.intValue() ) - TimeUnit.MINUTES.toSeconds( m );
+        long ms = aDouble.intValue() - (TimeUnit.MINUTES.toMillis( m ) + TimeUnit.SECONDS.toMillis( s ));
 
-            int length = value.length();
-            if ( length < 3 )
-            {
-                return value;
-            }
-            return value.substring( 0, length - 2 ) + "." + value.substring( length - 2 );
-        }
-        else
+        if( tmVersion != E_TmVersion.TM2 )
         {
-            value = aDouble.toString().replaceAll( "\\.0", "" );
-
-            int length = value.length();
-            if ( length < 4 )
-            {
-                return value;
-            }
-            return value.substring( 0, length - 3 ) + "." + value.substring( length - 3 );
+            ms = ms/10;
         }
+
+        return String.format( "%d:%d.%d", m, s, ms );
     }
 
     /**
